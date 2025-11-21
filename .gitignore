@@ -1,0 +1,49 @@
+# ROS 2
+build/
+install/
+log/
+.colcon/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+
+# Secrets (IMPORTANT!)
+.env
+*.key
+*.pem
+config/secrets/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Bag files (large)
+*.db3
+*.bag
+
+# Maps (can be large)
+maps/*.pgm
+maps/*.yaml
+
+# Camera calibration
+*.yaml.bak
+
+# Temporary files
+*.tmp
+temp/
