@@ -18,18 +18,6 @@ ROS 2 Jazzy-based autonomous robot for bin pickup and delivery using differentia
 
 ### One-Command Deployment
 ```bash
-# On your development machine (not the Pi)
-cd /path/to/your/local/binbuddy
-git init
-git add .
-git commit -m "Initial commit - complete BinBuddy system"
-git branch -M main
-git remote add origin https://github.com/evyatarbeni/binbuddy.git
-git push -u origin main
-
-# On the Raspberry Pi with fresh Ubuntu 24.04
-cd ~
 git clone https://github.com/evyatarbeni/binbuddy.git
 cd binbuddy
-chmod +x deploy.sh
 ./deploy.sh
