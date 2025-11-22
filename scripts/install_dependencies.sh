@@ -1,30 +1,38 @@
 #!/bin/bash
+###############################################################################
+# Install all system dependencies for BinBuddy
+# Assumes ROS 2 repository is already configured
+###############################################################################
+
 set -e
 
-echo "Installing ROS 2 Jazzy (alternative method)..."
+echo "Installing system packages..."
 
-# Ensure UTF-8
-sudo apt update && sudo apt install -y locales
-sudo locale-gen en_US en_US.UTF-8
-sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-export LANG=en_US.UTF-8
+# Check if ROS 2 repo exists, if not add it
+if [ ! -f /etc/apt/sources.list.d/ros2.list ]; then
+    echo "ROS 2 repository not found, adding it..."
+    
+    sudo apt install -y curl gnupg lsb-release
+    
+    sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+        -o /usr/share/keyrings/ros-archive-keyring.gpg
+    
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" \
+        | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+fi
 
-# Setup sources
-sudo apt install -y software-properties-common
-sudo add-apt-repository universe -y
-
-# Add ROS 2 GPG key (using new method)
-sudo apt update && sudo apt install -y curl
-sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-
-# Add repository to sources list  
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu noble main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-
-# Install ROS 2 packages
+# Update package lists
 sudo apt update
-sudo apt install -y ros-jazzy-desktop ros-dev-tools
+sudo apt upgrade -y
+
+###############################################################################
+# Install ROS 2 and Dependencies
+###############################################################################
+echo "Installing ROS 2 Jazzy and dependencies..."
 
 sudo apt install -y \
+    git wget build-essential cmake libudev-dev libusb-1.0-0-dev xterm \
+    python3-pip python3-colcon-common-extensions \
     ros-jazzy-desktop \
     ros-jazzy-navigation2 \
     ros-jazzy-nav2-bringup \
@@ -42,10 +50,13 @@ sudo apt install -y \
     ros-jazzy-xacro \
     ros-jazzy-joint-state-publisher \
     ros-jazzy-robot-state-publisher \
-    ros-jazzy-rviz2 \
-    python3-colcon-common-extensions
+    ros-jazzy-rviz2
 
-echo "Installing Python dependencies..."
+###############################################################################
+# Python Dependencies
+###############################################################################
+echo "Installing Python packages..."
+
 pip3 install --break-system-packages \
     openai \
     python-dotenv \
@@ -53,4 +64,9 @@ pip3 install --break-system-packages \
     opencv-python \
     numpy
 
-echo "✓ Dependencies installed successfully"
+###############################################################################
+# Verification
+###############################################################################
+echo ""
+echo "✓ All dependencies installed successfully"
+echo ""
