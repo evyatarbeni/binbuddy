@@ -47,65 +47,38 @@ echo -e "\n${GREEN}[3/10] Setting up cameras...${NC}"
 bash "$REPO_DIR/scripts/setup_cameras.sh"
 
 echo -e "\n${GREEN}[4/10] Creating workspace...${NC}"
-# Create workspace directory FIRST
 mkdir -p "$WORKSPACE_DIR/src"
 echo -e "${GREEN}✓ Workspace created at $WORKSPACE_DIR${NC}"
 
 echo -e "\n${GREEN}[5/10] Generating ROS 2 packages...${NC}"
-# Bootstrap creates packages in WORKSPACE_DIR
 bash "$REPO_DIR/bootstrap/bootstrap.sh" "$WORKSPACE_DIR"
 
 echo -e "\n${GREEN}[6/10] Installing LiDAR driver...${NC}"
 cd "$WORKSPACE_DIR/src"
 if [ ! -d "ldlidar_stl_ros2" ]; then
     git clone https://github.com/ldrobotSensorTeam/ldlidar_stl_ros2.git
-    echo -e "${GREEN}✓ LiDAR driver cloned${NC}"
-    
-    # Fix pthread compilation error
-    echo -e "${BLUE}Patching LiDAR driver for Ubuntu 24.04...${NC}"
-    LOGFILE="$WORKSPACE_DIR/src/ldlidar_stl_ros2/ldlidar_driver/src/logger/log_module.cpp"
-    
-    if ! grep -q "#include <pthread.h>" "$LOGFILE"; then
-        # Add pthread.h include after the first #include statement
-        sed -i '/#include/a #include <pthread.h>' "$LOGFILE"
-        echo -e "${GREEN}✓ LiDAR driver patched${NC}"
-    fi
-else
-    echo -e "${YELLOW}LiDAR driver already exists${NC}"
+fi
+
+# Fix pthread compilation error
+echo -e "${BLUE}Patching LiDAR driver for Ubuntu 24.04...${NC}"
+LIDAR_LOG="$WORKSPACE_DIR/src/ldlidar_stl_ros2/ldlidar_driver/src/logger/log_module.cpp"
+if [ -f "$LIDAR_LOG" ] && ! grep -q "#include <pthread.h>" "$LIDAR_LOG"; then
+    sed -i '18a #include <pthread.h>' "$LIDAR_LOG"
+    echo -e "${GREEN}✓ LiDAR driver patched${NC}"
 fi
 
 echo -e "\n${GREEN}[7/10] Building workspace (10-15 minutes)...${NC}"
 cd "$WORKSPACE_DIR"
-
-# Ensure ROS 2 is sourced
-if [ -z "$ROS_DISTRO" ]; then
-    echo -e "${BLUE}Sourcing ROS 2 environment...${NC}"
-    source /opt/ros/jazzy/setup.bash
-fi
-
-# Verify ament_cmake is available
-if ! dpkg -l | grep -q ros-jazzy-ament-cmake; then
-    echo -e "${RED}Installing missing build dependencies...${NC}"
-    sudo apt install -y ros-jazzy-ament-cmake ros-jazzy-rosidl-default-generators
-    source /opt/ros/jazzy/setup.bash
-fi
-
-echo -e "${BLUE}Building packages...${NC}"
-echo "CMAKE_PREFIX_PATH: $CMAKE_PREFIX_PATH"
-
-# Clean build if this is a retry
-if [ -d "build" ] && [ ! -d "install" ]; then
-    echo -e "${YELLOW}Cleaning previous failed build...${NC}"
-    rm -rf build log
-fi
-
+source /opt/ros/jazzy/setup.bash
 colcon build --symlink-install --parallel-workers 2
 
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ Build successful${NC}"
-else
-    echo -e "${RED}Build failed${NC}"
-    exit 1
+echo -e "\n${GREEN}[8/10] Configuring environment...${NC}"
+if ! grep -q "source $WORKSPACE_DIR/install/setup.bash" ~/.bashrc; then
+    echo "" >> ~/.bashrc
+    echo "# BinBuddy ROS 2 Workspace" >> ~/.bashrc
+    echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+    echo "source $WORKSPACE_DIR/install/setup.bash" >> ~/.bashrc
+    echo -e "${GREEN}✓ Added to ~/.bashrc${NC}"
 fi
 
 echo -e "\n${GREEN}[9/10] Setting up devices...${NC}"
@@ -116,7 +89,6 @@ sudo usermod -a -G video $USER
 echo -e "\n${GREEN}[10/10] Final setup...${NC}"
 mkdir -p "$HOME/maps" "$HOME/binbuddy_recordings"
 
-# Copy .env if not exists
 if [ -f "$REPO_DIR/config/.env.example" ] && [ ! -f "$WORKSPACE_DIR/src/robot_nlp/.env" ]; then
     cp "$REPO_DIR/config/.env.example" "$WORKSPACE_DIR/src/robot_nlp/.env"
     echo -e "${GREEN}✓ .env template copied${NC}"
@@ -139,11 +111,13 @@ echo -e "3. After reboot, test the system:"
 echo -e "   ${BLUE}bash $REPO_DIR/scripts/test_system.sh${NC}"
 echo ""
 echo -e "4. Launch BinBuddy:"
-echo -e "   ${BLUE}ros2 launch robot_bringup bringup.launch.py mode:=teleop${NC}"
+echo -e "   ${BLUE}ros2 launch robot_bringup bringup.launch.py${NC}"
 echo ""
 echo -e "${GREEN}Documentation:${NC} $REPO_DIR/docs/"
 echo ""
 echo -e "${YELLOW}Reboot now? (y/n)${NC}"
 read -p "> " -n 1 -r
 echo
-[[ $REPLY =~ ^[Yy]$ ]] && sudo reboot
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    sudo reboot
+fi
