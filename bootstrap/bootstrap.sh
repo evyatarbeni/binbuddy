@@ -6,8 +6,8 @@
 
 set -e
 
-# Accept workspace path as argument, default to current location
-WORKSPACE_DIR="${1:-$(pwd)/ros2_ws}"
+# Accept workspace path as argument, default to ~/binbuddy_ws
+WORKSPACE_DIR="${1:-$HOME/binbuddy_ws}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 GREEN='\033[0;32m'
