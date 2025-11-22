@@ -60,6 +60,16 @@ cd "$WORKSPACE_DIR/src"
 if [ ! -d "ldlidar_stl_ros2" ]; then
     git clone https://github.com/ldrobotSensorTeam/ldlidar_stl_ros2.git
     echo -e "${GREEN}✓ LiDAR driver cloned${NC}"
+    
+    # Fix pthread compilation error
+    echo -e "${BLUE}Patching LiDAR driver for Ubuntu 24.04...${NC}"
+    LOGFILE="$WORKSPACE_DIR/src/ldlidar_stl_ros2/ldlidar_driver/src/logger/log_module.cpp"
+    
+    if ! grep -q "#include <pthread.h>" "$LOGFILE"; then
+        # Add pthread.h include after the first #include statement
+        sed -i '/#include/a #include <pthread.h>' "$LOGFILE"
+        echo -e "${GREEN}✓ LiDAR driver patched${NC}"
+    fi
 else
     echo -e "${YELLOW}LiDAR driver already exists${NC}"
 fi
