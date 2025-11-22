@@ -76,16 +76,36 @@ fi
 
 echo -e "\n${GREEN}[7/10] Building workspace (10-15 minutes)...${NC}"
 cd "$WORKSPACE_DIR"
-source /opt/ros/jazzy/setup.bash
+
+# Ensure ROS 2 is sourced
+if [ -z "$ROS_DISTRO" ]; then
+    echo -e "${BLUE}Sourcing ROS 2 environment...${NC}"
+    source /opt/ros/jazzy/setup.bash
+fi
+
+# Verify ament_cmake is available
+if ! dpkg -l | grep -q ros-jazzy-ament-cmake; then
+    echo -e "${RED}Installing missing build dependencies...${NC}"
+    sudo apt install -y ros-jazzy-ament-cmake ros-jazzy-rosidl-default-generators
+    source /opt/ros/jazzy/setup.bash
+fi
+
+echo -e "${BLUE}Building packages...${NC}"
+echo "CMAKE_PREFIX_PATH: $CMAKE_PREFIX_PATH"
+
+# Clean build if this is a retry
+if [ -d "build" ] && [ ! -d "install" ]; then
+    echo -e "${YELLOW}Cleaning previous failed build...${NC}"
+    rm -rf build log
+fi
+
 colcon build --symlink-install --parallel-workers 2
 
-echo -e "\n${GREEN}[8/10] Configuring environment...${NC}"
-if ! grep -q "source $WORKSPACE_DIR/install/setup.bash" ~/.bashrc; then
-    echo "" >> ~/.bashrc
-    echo "# BinBuddy ROS 2 Workspace" >> ~/.bashrc
-    echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
-    echo "source $WORKSPACE_DIR/install/setup.bash" >> ~/.bashrc
-    echo -e "${GREEN}✓ Added to ~/.bashrc${NC}"
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Build successful${NC}"
+else
+    echo -e "${RED}Build failed${NC}"
+    exit 1
 fi
 
 echo -e "\n${GREEN}[9/10] Setting up devices...${NC}"
