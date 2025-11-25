@@ -1,88 +1,27 @@
-# Changelog
+cat >> ~/binbuddy/CHANGELOG.md << 'EOF'
 
-All notable changes to BinBuddy will be documented in this file.
-
-## [1.0.1] - 2024-11-21
+## [1.0.2] - 2024-11-24
 
 ### Fixed
-- Arduino auto-detection for `/dev/ttyACM1` (Raspberry Pi 5 default)
-- NumPy compatibility issue with cv_bridge (downgraded to <2.0)
-- LiDAR driver pthread compilation error (auto-patched during deployment)
-- Bootstrap workspace path handling (now correctly uses `~/binbuddy_ws`)
-- Deploy script robustness and error handling
-- Missing ROS 2 build dependencies (ament_cmake, rosidl_default_generators)
-
-### Added
-- Arduino port detection script (`scripts/detect_arduino.sh`)
-- Comprehensive testing documentation (`docs/TESTING.md`)
-- Improved error messages and user guidance in all scripts
-- Better launch file configuration with proper parameter handling
-- Automatic pthread.h patch for LiDAR driver
-- CHANGELOG.md for version tracking
+- **CRITICAL**: Motor control system now working
+  - Changed from binary protocol to ASCII protocol
+  - Base controller sends correct commands ('F', 'B', 'L', 'R')
+  - Added automatic speed initialization on startup
+  - Implemented heartbeat to prevent watchdog timeout
 
 ### Changed
-- Updated README.md with known issues and fixes
-- Enhanced deployment script with better pre-flight checks
-- Improved `install_dependencies.sh` with explicit package list
-- Better documentation structure and clarity
+- Updated `base_controller.py` to use ASCII commands
+- Updated `crane_controller.py` to use proportional control
+- Set default motor speed to 30 (safe/testing level)
 
-## [1.0.0] - 2024-11-20
+### Tested
+- Motors respond to ROS 2 velocity commands
+- Movement enable/disable functional
+- Emergency stop functional
+- Watchdog safety system operational
 
-### Added
-- Initial release of BinBuddy autonomous robot system
-- Complete ROS 2 Jazzy workspace structure
-- Differential drive motor control with odometry
-- Crane control system with limit switches and presets
-- Triple camera support (1x USB + 2x Raspberry Pi cameras)
-- LDROBOT STL-19P LiDAR integration
-- Natural language control via ChatGPT API
-- Keyboard teleop interface
-- Nav2 navigation stack integration
-- SLAM Toolbox mapping capabilities
-- One-command deployment script
-- Comprehensive bootstrap system for package generation
-- Safety systems (movement enable/disable, emergency stop)
-- System health monitoring
-- URDF robot description
-- RViz configuration
-- udev rules for device management
-
-### Hardware Support
-- Raspberry Pi 5 (4GB+ RAM)
-- Ubuntu 24.04 Server (64-bit ARM)
-- Arduino Mega 2560
-- DC motor differential drive
-- Linear actuator crane
-
-### Documentation
-- Quick start guide
-- Hardware setup guide
-- API reference
-- Troubleshooting guide
-
-## [Unreleased]
-
-### Planned Features
-- Web dashboard for remote monitoring
-- Autonomous bin detection using computer vision
-- Path planning improvements
-- Battery monitoring and low-power warnings
-- Multi-robot coordination
-- Improved natural language understanding
-- Mobile app for control
-
----
-
-## Version History Notes
-
-### Version Format
-- MAJOR.MINOR.PATCH
-- MAJOR: Incompatible API changes
-- MINOR: New functionality (backwards compatible)
-- PATCH: Bug fixes (backwards compatible)
-
-### Support
-- Current version: 1.0.1
-- Supported platforms: Raspberry Pi 5, Ubuntu 24.04, ROS 2 Jazzy
-- Python version: 3.12
-- ROS 2 version: Jazzy Jalisco
+### Known Issues
+- Speed is set to LOW (30) for safety - increase for normal operation
+- LiDAR not configured (wrong parameters)
+- Camera NumPy compatibility warning
+EOF
