@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>robot_teleop</name>
+  <version>1.0.0</version>
+  <description>Custom keyboard teleop for BinBuddy</description>
+  <maintainer email="evyatarbeni@gmail.com">Evyatar Beni</maintainer>
+  <license>MIT</license>
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>robot_interfaces</depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

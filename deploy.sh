@@ -37,6 +37,7 @@ if [ -f /etc/os-release ]; then
         echo -e "${RED}ERROR: Ubuntu 24.04 required${NC}"
         exit 1
     fi
+    echo -e "${GREEN}✓ Ubuntu 24.04 detected${NC}"
 fi
 
 echo -e "\n${GREEN}[2/10] Installing dependencies...${NC}"
@@ -45,38 +46,50 @@ bash "$REPO_DIR/scripts/install_dependencies.sh"
 echo -e "\n${GREEN}[3/10] Setting up cameras...${NC}"
 bash "$REPO_DIR/scripts/setup_cameras.sh"
 
-echo -e "\n${GREEN}[4/10] Generating ROS 2 packages...${NC}"
-bash "$REPO_DIR/bootstrap/bootstrap.sh"
+echo -e "\n${GREEN}[4/10] Creating workspace...${NC}"
+mkdir -p "$WORKSPACE_DIR/src"
+echo -e "${GREEN}✓ Workspace created at $WORKSPACE_DIR${NC}"
 
-echo -e "\n${GREEN}[5/10] Installing LiDAR driver...${NC}"
+echo -e "\n${GREEN}[5/10] Generating ROS 2 packages...${NC}"
+bash "$REPO_DIR/bootstrap/bootstrap.sh" "$WORKSPACE_DIR"
+
+echo -e "\n${GREEN}[6/10] Installing LiDAR driver...${NC}"
 cd "$WORKSPACE_DIR/src"
 if [ ! -d "ldlidar_stl_ros2" ]; then
     git clone https://github.com/ldrobotSensorTeam/ldlidar_stl_ros2.git
 fi
 
-echo -e "\n${GREEN}[6/10] Building workspace (10-15 minutes)...${NC}"
+# Fix pthread compilation error
+echo -e "${BLUE}Patching LiDAR driver...${NC}"
+LIDAR_LOG="$WORKSPACE_DIR/src/ldlidar_stl_ros2/ldlidar_driver/src/logger/log_module.cpp"
+if [ -f "$LIDAR_LOG" ] && ! grep -q "#include <pthread.h>" "$LIDAR_LOG"; then
+    sed -i '18a #include <pthread.h>' "$LIDAR_LOG"
+    echo -e "${GREEN}✓ LiDAR driver patched${NC}"
+fi
+
+echo -e "\n${GREEN}[7/10] Building workspace (10-15 minutes)...${NC}"
 cd "$WORKSPACE_DIR"
 source /opt/ros/jazzy/setup.bash
 colcon build --symlink-install --parallel-workers 2
 
-echo -e "\n${GREEN}[7/10] Configuring environment...${NC}"
+echo -e "\n${GREEN}[8/10] Configuring environment...${NC}"
 if ! grep -q "source $WORKSPACE_DIR/install/setup.bash" ~/.bashrc; then
     echo "" >> ~/.bashrc
     echo "# BinBuddy ROS 2 Workspace" >> ~/.bashrc
     echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
     echo "source $WORKSPACE_DIR/install/setup.bash" >> ~/.bashrc
+    echo -e "${GREEN}✓ Added to ~/.bashrc${NC}"
 fi
 
-echo -e "\n${GREEN}[8/10] Setting up devices...${NC}"
+echo -e "\n${GREEN}[9/10] Setting up devices...${NC}"
 bash "$REPO_DIR/scripts/setup_udev_rules.sh"
 sudo usermod -a -G dialout $USER
 sudo usermod -a -G video $USER
 
-echo -e "\n${GREEN}[9/10] Final setup...${NC}"
+echo -e "\n${GREEN}[10/10] Final setup...${NC}"
 mkdir -p "$HOME/maps" "$HOME/binbuddy_recordings"
 
-# Copy .env if not exists
-if [ ! -f "$WORKSPACE_DIR/src/robot_nlp/.env" ]; then
+if [ -f "$REPO_DIR/config/.env.example" ] && [ ! -f "$WORKSPACE_DIR/src/robot_nlp/.env" ]; then
     cp "$REPO_DIR/config/.env.example" "$WORKSPACE_DIR/src/robot_nlp/.env"
 fi
 
@@ -86,10 +99,20 @@ echo -e "${GREEN}║                  DEPLOYMENT SUCCESSFUL!                    
 echo -e "${GREEN}╚══════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${YELLOW}NEXT STEPS:${NC}"
-echo "  1. nano $WORKSPACE_DIR/src/robot_nlp/.env  # Add OpenAI key"
-echo "  2. sudo reboot"
-echo "  3. ros2 launch robot_bringup bringup.launch.py mode:=teleop"
 echo ""
-read -p "Reboot now? (y/n) " -n 1 -r
+echo -e "1. ${RED}Add OpenAI API key:${NC}"
+echo -e "   ${BLUE}nano $WORKSPACE_DIR/src/robot_nlp/.env${NC}"
+echo ""
+echo -e "2. ${RED}REBOOT:${NC}"
+echo -e "   ${BLUE}sudo reboot${NC}"
+echo ""
+echo -e "3. Test system:"
+echo -e "   ${BLUE}bash $REPO_DIR/scripts/test_system.sh${NC}"
+echo ""
+echo -e "4. Launch robot:"
+echo -e "   ${BLUE}ros2 launch robot_bringup bringup.launch.py${NC}"
+echo ""
+echo -e "${YELLOW}Reboot now? (y/n)${NC}"
+read -p "> " -n 1 -r
 echo
 [[ $REPLY =~ ^[Yy]$ ]] && sudo reboot

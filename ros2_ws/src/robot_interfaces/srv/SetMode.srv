@@ -1,0 +1,6 @@
+# Mode switching service
+string mode  # "autonomy", "teleop", "estop"
+---
+bool success
+string message
+string previous_mode

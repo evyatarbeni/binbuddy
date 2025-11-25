@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>robot_navigation</name>
+  <version>1.0.0</version>
+  <description>Navigation configuration for BinBuddy</description>
+  <maintainer email="evyatarbeni@gmail.com">Evyatar Beni</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>navigation2</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

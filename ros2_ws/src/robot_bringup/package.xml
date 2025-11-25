@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>robot_bringup</name>
+  <version>1.0.0</version>
+  <description>Master launch files for BinBuddy</description>
+  <maintainer email="evyatarbeni@gmail.com">Evyatar Beni</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>robot_interfaces</exec_depend>
+  <exec_depend>robot_base</exec_depend>
+  <exec_depend>crane_control</exec_depend>
+  <exec_depend>robot_description</exec_depend>
+  <exec_depend>robot_sensing</exec_depend>
+  <exec_depend>robot_teleop</exec_depend>
+  <exec_depend>robot_nlp</exec_depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

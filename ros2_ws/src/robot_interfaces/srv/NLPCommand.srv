@@ -1,0 +1,7 @@
+# Natural language command processing
+string command_text
+---
+bool success
+string interpretation
+string[] planned_actions
+string error_message

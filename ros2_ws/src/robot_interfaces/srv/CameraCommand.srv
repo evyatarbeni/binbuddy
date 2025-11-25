@@ -1,0 +1,7 @@
+# Camera control commands
+string command              # "start_recording", "stop_recording", "snapshot"
+string camera_name          # "usb", "picam1", "picam2"
+---
+bool success
+string message
+string file_path            # Path to saved file (if applicable)

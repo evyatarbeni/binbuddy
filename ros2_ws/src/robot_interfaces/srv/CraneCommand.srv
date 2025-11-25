@@ -1,0 +1,7 @@
+# Crane command service
+string command              # "HOME", "STOW", "PICK", "PLACE", "GOTO"
+float32 target_position     # 0-100 for GOTO command
+---
+bool success
+string message
+float32 final_position

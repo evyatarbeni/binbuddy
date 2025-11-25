@@ -1,0 +1,8 @@
+# Crane movement action with feedback
+float32 target_position     # Target position (0-100%)
+float32 speed               # Movement speed (0-100%)
+---
+bool success
+float32 final_position
+---
+float32 current_position    # Feedback during motion

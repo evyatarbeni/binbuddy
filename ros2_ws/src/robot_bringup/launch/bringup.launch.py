@@ -6,7 +6,7 @@ Launches all core nodes based on mode selection
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -14,44 +14,37 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 def generate_launch_description():
     # Declare launch arguments
     mode_arg = DeclareLaunchArgument(
-        'mode',
-        default_value='teleop',
-        description='Operating mode: teleop, autonomy, estop'
-    )
-
+        'mode', default_value='teleop',
+        description='Operating mode: teleop, autonomy, estop')
+    
     use_rviz_arg = DeclareLaunchArgument(
-        'use_rviz',
-        default_value='false',
-        description='Start RViz visualization'
-    )
-
+        'use_rviz', default_value='false',
+        description='Start RViz visualization')
+    
     use_slam_arg = DeclareLaunchArgument(
-        'use_slam',
-        default_value='false',
-        description='Start SLAM (mapping mode)'
-    )
-
+        'use_slam', default_value='false',
+        description='Start SLAM (mapping mode)')
+    
     map_arg = DeclareLaunchArgument(
-        'map',
-        default_value='',
-        description='Path to map file for navigation'
-    )
-
+        'map', default_value='',
+        description='Path to map file for navigation')
+    
     # Get launch configurations
+    mode = LaunchConfiguration('mode')
     use_rviz = LaunchConfiguration('use_rviz')
     use_slam = LaunchConfiguration('use_slam')
-
+    map_file = LaunchConfiguration('map')
+    
     # Robot description
     robot_description_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
                 FindPackageShare('robot_description'),
-                'launch',
-                'state_publisher.launch.py'
+                'launch', 'state_publisher.launch.py'
             ])
         ])
     )
-
+    
     # Base controller (motors + odometry)
     base_controller_node = Node(
         package='robot_base',
@@ -60,10 +53,10 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'serial_port': '/dev/ttyACM0',
-            'movement_enabled': False,  # Must enable explicitly for safety
+            'movement_enabled': False,  # Must enable explicitly
         }]
     )
-
+    
     # Crane controller
     crane_controller_node = Node(
         package='crane_control',
@@ -75,7 +68,7 @@ def generate_launch_description():
             'movement_enabled': False,
         }]
     )
-
+    
     # LiDAR driver
     lidar_node = Node(
         package='ldlidar_stl_ros2',
@@ -89,7 +82,7 @@ def generate_launch_description():
             'laser_scan_topic_name': 'scan',
         }]
     )
-
+    
     # Camera manager
     camera_manager_node = Node(
         package='robot_sensing',
@@ -101,16 +94,16 @@ def generate_launch_description():
             'frame_rate': 15,
         }]
     )
-
-    # Teleop (always available, but only actively controlled when needed)
+    
+    # Teleop (conditional on mode=teleop)
     teleop_node = Node(
         package='robot_teleop',
         executable='binbuddy_teleop',
         name='binbuddy_teleop',
         output='screen',
-        prefix='xterm -e',  # Launch in separate window
+        condition=IfCondition(LaunchConfiguration('mode', default='teleop'))
     )
-
+    
     # NLP commander
     nlp_node = Node(
         package='robot_nlp',
@@ -118,7 +111,7 @@ def generate_launch_description():
         name='nlp_commander',
         output='screen'
     )
-
+    
     # RViz (optional)
     rviz_node = Node(
         package='rviz2',
@@ -126,12 +119,11 @@ def generate_launch_description():
         name='rviz2',
         arguments=['-d', PathJoinSubstitution([
             FindPackageShare('robot_bringup'),
-            'rviz',
-            'binbuddy.rviz'
+            'rviz', 'binbuddy.rviz'
         ])],
         condition=IfCondition(use_rviz)
     )
-
+    
     return LaunchDescription([
         mode_arg,
         use_rviz_arg,
@@ -142,6 +134,7 @@ def generate_launch_description():
         crane_controller_node,
         lidar_node,
         camera_manager_node,
+        teleop_node,
         nlp_node,
         rviz_node,
     ])
